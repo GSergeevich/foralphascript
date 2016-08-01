@@ -1,0 +1,27 @@
+---  
+- hosts : all
+  sudo : yes
+  tasks : 
+
+   - name : Install software
+     apt : name={{item}} state=present update_cache=yes
+     with_items :  
+        - nginx
+        - mysql-server
+
+   - name : Config mysql
+     lineinfile : dest=/etc/mysql/my.cnf regexp='^# * InnoDB' line='innodb_buffer_pool_size=100M' state=present
+     notify :
+        - restart mysql-server
+
+   - name : config nginx
+     copy : src=./nginx.config dest=/etc/nginx/sites-available/default backup=yes owner=root group=root mode=644  
+     notify : 
+        - restart nginx
+
+  handlers :
+   - name : restart mysql-server
+     service : name=mysql state=reloaded
+
+   - name : restart nginx
+     service : name=nginx state=reloaded         
